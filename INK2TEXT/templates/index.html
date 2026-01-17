@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INK2TEXT | Handwriting to Digital Text</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --primary-dark: #5649c0;
+            --secondary: #00cec9;
+            --accent: #fd79a8;
+            --light: #f8f9fa;
+            --dark: #2d3436;
+            --gray: #636e72;
+            --overlay: rgba(45, 52, 54, 0.85);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
+            url("{{ url_for('static', filename='img/bg1.jpg') }}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: var(--light);
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+        }
+
+        .container {
+            background: var(--overlay);
+            padding: 2.5rem;
+            border-radius: 15px;
+            text-align: center;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transform: translateY(0);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin: 2rem 0;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        h1 {
+            margin-bottom: 1rem;
+            font-weight: 600;
+            font-size: 2.5rem;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            position: relative;
+            display: inline-block;
+        }
+
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            border-radius: 3px;
+        }
+
+        p {
+            margin-bottom: 2rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 300;
+            font-size: 1.1rem;
+        }
+
+        .upload-area {
+            position: relative;
+            margin: 2rem 0;
+            padding: 2rem;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: rgba(108, 92, 231, 0.1);
+        }
+
+        .upload-area i {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .upload-area p {
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px rgba(108, 92, 231, 0.4);
+        }
+
+        .upload-btn:active {
+            transform: translateY(1px);
+        }
+
+        #pdf-upload {
+            display: none;
+        }
+
+        .action-buttons {
+            margin-top: 2.5rem;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .action-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .action-btn:first-child {
+            background: linear-gradient(135deg, var(--secondary), #00a8a8);
+            box-shadow: 0 4px 15px rgba(0, 206, 201, 0.3);
+        }
+
+        .action-btn:last-child {
+            background: linear-gradient(135deg, var(--accent), #e84393);
+            box-shadow: 0 4px 15px rgba(253, 121, 168, 0.3);
+        }
+
+        footer {
+            margin-top: auto;
+            padding: 1.5rem;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.8rem;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 1.5rem;
+                width: 95%;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                gap: 0.8rem;
+            }
+
+            .action-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <form method="POST" enctype="multipart/form-data">
+        <div class="container">
+            <h1>INK2TEXT</h1>
+            <p>Transform your neat handwritten documents into editable digital text</p>
+            <div class="upload-area">
+                <i class="fas fa-file-upload"></i>
+                <p>Drag & drop your PDF file here or</p>
+                <input type="file" name="pdf" id="pdf-upload" accept=".pdf" required>
+                <button class="upload-btn" onclick="document.getElementById('pdf-upload').click(); return false;">
+                    <i class="fas fa-cloud-upload-alt"></i> Upload PDF
+                </button>
+            </div>
+
+            <div class="action-buttons">
+                <button type="submit" class="action-btn">
+                    <i class="fas fa-play"></i> Convert to Text
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <footer>
+        &copy; 2023 INK2TEXT | Handwriting to Digital Text Converter
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.querySelector('.container');
+            setTimeout(() => {
+                container.style.opacity = '1';
+                container.style.transform = 'translateY(0)';
+            }, 100);
+        });
+
+        const uploadArea = document.querySelector('.upload-area');
+        const fileInput = document.getElementById('pdf-upload');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight() {
+            uploadArea.classList.add('highlight');
+        }
+
+        function unhighlight() {
+            uploadArea.classList.remove('highlight');
+        }
+
+        uploadArea.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInput.files = files;
+            console.log('File dropped:', files[0].name);
+        }
+    </script>
+</body>
+
+</html>
